@@ -1,7 +1,9 @@
 // Copyright (c) ZeniMax Media Inc.
 // Licensed under the GNU General Public License 2.0.
 #include "g_local.h"
+#include "game.h"
 #include "m_player.h"
+#include <cstdio>
 
 void SelectNextItem(edict_t *ent, item_flags_t itflags, bool menu = true)
 {
@@ -45,6 +47,39 @@ void SelectNextItem(edict_t *ent, item_flags_t itflags, bool menu = true)
 	cl->pers.selected_item = IT_NULL;
 }
 
+void Cmd_Attack2(edict_t *ent)
+{
+	gclient_t *client;
+	gitem_t *weapon;
+
+	client = ent->client;
+	weapon = client->pers.weapon;
+
+	// [DM23] Possibly check level time like in p_client 3397
+	if (ent->client->weaponstate == WEAPON_READY)
+	{
+			
+		if (weapon->id == IT_WEAPON_BLASTER)
+		{
+			weapon->flags ^= IF_ALT_ATTACK;
+			if((weapon->flags & IF_ALT_ATTACK) == IF_ALT_ATTACK)
+				gi.LocClient_Print(ent, PRINT_CENTER, "Alternative Mode Activated");
+			else
+				gi.LocClient_Print(ent, PRINT_HIGH, "Alternative Mode Deactivated");
+		}
+		else if (weapon->id == IT_WEAPON_MACHINEGUN)
+		{
+			//weapon->view_model = "models/weapons/v_etf_rifle/tris.md2";// Need to redraw weapon :(
+			gi.sound(ent, CHAN_AUTO, gi.soundindex("weapons/change.wav"), 1, ATTN_NORM, 0);
+			ent->client->weaponstate = WEAPON_ACTIVATING;
+			ent->client->ps.gunframe = 0;
+			ent->client->ps.gunindex = gi.modelindex("models/weapons/v_etf_rifle/tris.md2");				
+			gi.LocClient_Print(ent, PRINT_HIGH, "BOOM!!!");
+			weapon->flags |= IF_ALT_ATTACK;
+		}
+
+	}
+}
 void SelectPrevItem(edict_t *ent, item_flags_t itflags)
 {
 	gclient_t *cl;
@@ -1634,6 +1669,11 @@ void ClientCommand(edict_t *ent)
 		Cmd_Help_f(ent);
 		return;
 	}
+	if (Q_strcasecmp(cmd, "attack2") == 0)
+	{
+		Cmd_Attack2(ent);
+		return;
+	}	
 	if (Q_strcasecmp(cmd, "listmonsters") == 0)
 	{
 		Cmd_ListMonsters_f(ent);

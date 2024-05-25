@@ -846,6 +846,8 @@ enum item_flags_t : uint32_t
 
 	IF_NOT_RANDOM = bit_v<13>, // [Paril-KEX] item never shows up in randomizations
 
+	IF_ALT_ATTACK = bit_v<14>, // [DM23] Alternative Attack for player weapons
+
 	IF_ANY			= 0xFFFFFFFF
 };
 
@@ -2009,6 +2011,7 @@ extern gitem_t itemlist[IT_TOTAL];
 bool CheckFlood(edict_t *ent);
 void Cmd_Help_f(edict_t *ent);
 void Cmd_Score_f(edict_t *ent);
+void Cmd_Attack2(edict_t *ent);
 
 //
 // g_items.c

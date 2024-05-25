@@ -1365,7 +1365,12 @@ void Weapon_Blaster(edict_t *ent)
 	constexpr int pause_frames[] = { 19, 32, 0 };
 	constexpr int fire_frames[] = { 5, 0 };
 
-	Weapon_Generic(ent, 4, 8, 52, 55, pause_frames, fire_frames, Weapon_Blaster_Fire);
+	if (ent->client->pers.weapon->flags & IF_ALT_ATTACK)
+	
+		Weapon_Generic(ent, 4, 5, 52, 55, pause_frames, fire_frames, Weapon_Blaster_Fire);
+	else
+		Weapon_Generic(ent, 4, 8, 52, 55, pause_frames, fire_frames, Weapon_Blaster_Fire);
+	//Cmd_Attack2(ent); // show scores
 }
 
 void Weapon_HyperBlaster_Fire(edict_t *ent)
@@ -1462,12 +1467,16 @@ void Machinegun_Fire(edict_t *ent)
 	int damage = 8;
 	int kick = 2;
 
-	if (!(ent->client->buttons & BUTTON_ATTACK))
+	if(!(ent->client->pers.weapon->flags & IF_ALT_ATTACK))
 	{
-		ent->client->machinegun_shots = 0;
-		ent->client->ps.gunframe = 6;
-		return;
+		if (!(ent->client->buttons & BUTTON_ATTACK))
+		{
+			ent->client->machinegun_shots = 0;
+			ent->client->ps.gunframe = 6;
+			return;
+		}
 	}
+
 
 	if (ent->client->ps.gunframe == 4)
 		ent->client->ps.gunframe = 5;
@@ -1511,7 +1520,21 @@ void Machinegun_Fire(edict_t *ent)
 	// Paril: kill sideways angle on hitscan
 	P_ProjectSource(ent, ent->client->v_angle, { 0, 0, -8 }, start, dir);
 	G_LagCompensate(ent, start, dir);
-	fire_bullet(ent, start, dir, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN);
+
+	if(ent->client->pers.weapon->flags & IF_ALT_ATTACK)
+		{
+			float radius;
+			radius = (float) (damage + 40);
+			gi.LocClient_Print(ent, PRINT_HIGH, "HOLYSNOZZ");
+			fire_grenade(ent, start, dir, 120, 600, 2.5_sec, radius, (crandom_open() * 10.0f), (200 + crandom_open() * 10.0f), false);
+			ent->client->pers.weapon->flags &= ~IF_ALT_ATTACK;
+			ent->client->weapon_sound = gi.soundindex("weapons/chngnl1a.wav");
+		}
+	else
+		{
+			fire_bullet(ent, start, dir, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN);
+		}
+	
 	G_UnLagCompensate();
 	Weapon_PowerupSound(ent);
 
@@ -1542,6 +1565,15 @@ void Weapon_Machinegun(edict_t *ent)
 {
 	constexpr int pause_frames[] = { 23, 45, 0 };
 
+	if (ent->client->pers.weapon->flags & IF_ALT_ATTACK)
+	{
+		ent->client->weaponstate = WEAPON_FIRING;
+		Machinegun_Fire(ent);
+		
+		//ent->client->ps.gunframe = 4;
+		//Weapon_RocketLauncher_Fire(ent);
+		
+	}
 	Weapon_Repeating(ent, 3, 5, 45, 49, pause_frames, Machinegun_Fire);
 }
 
